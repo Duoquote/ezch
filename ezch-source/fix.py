@@ -4,14 +4,14 @@
 
 # 	-	Unihan_Readings.txt (Found inside "https://unicode.org/Public/UNIDATA/Unihan.zip")
 
-# This script generates 5 files in according formats:
+# This script generates 6 files in according formats:
 # 	-	Json Hanzis (hanzi.json), you can access hanzi definitions by loading
 # 	and accessing data like `data["hanzi-decimal-value"]` example:
 # 	`data["21018"]`.
 
 # 	-	Json Hanzis (List Format) [hanzi1.json], by using this file you can access
 # 	data by iterating the json objects like:
-# 		`for i in data: 
+# 		`for i in data:
 # 			print(i) //{"chr": "char", "def": "definition"}`
 # 	data would be like:
 # 		[{"chr": "character's decimal value", "def", "definition"}, {}, {}, {}....]
@@ -19,8 +19,12 @@
 # 	-	Chinese Words Json List, similar to hanzi.json.
 
 # 	-	Chinese Words Json List, similar to hanzi1.json.
+#	-	Json scrambled english - turkish(or any language of your choice)
+#	translation. Will add proper version later.
 
-import json, os
+import json, os, requests, json, queue, time
+from threading import Thread
+
 if not os.path.exists("output/"):
 	os.mkdir("output")
 newlist = {}
@@ -81,3 +85,109 @@ for i in neww:
 	newx[i["word"]]["definitions"] = i["definitions"]
 with open("output/words1.json", "w") as f:
 	f.write(json.dumps(newx))
+
+
+class translated:
+	def __init__(self):
+		# In this section the google api key gets defined so you can just type:
+		# self.key="YOUR_KEY" instead of these lines. You can get your api key
+		# from google developer console by creating an app, adding translate
+		# api and adding a auth method as rest api so you can use that key here.
+		with open(os.environ["HOME"]+"/sss.txt") as f:
+			self.key = f.read().replace("\n", "")
+		#---------------------------------------------
+		self.api = "https://www.googleapis.com/language/translate/v2?key={}".format(self.key)
+		self.requestTemplate = {"q": [], "source": "en", "target": "tr", "format": "text"}
+		self.texts = []
+		self.parts = queue.Queue()
+		self.results = []
+		self.count = 0
+		self.repl = []
+	def comp(self):
+		with open("output/hanzi.json") as f:
+			hanziList = json.loads(f.read())
+		with open("output/words1.json") as f:
+			wordList = json.loads(f.read())
+		dummy = {}
+		count = 0
+		for word in wordList:
+			for defs in wordList[word]["definitions"]:
+				if not defs in dummy:
+					dummy[defs] = 1
+				else:
+					dummy[defs] += 1
+			count += 1
+			# if count > 50:
+			# 	break
+		state = len(dummy)
+		while True:
+			temp = []
+			if state != 0:
+				for key in dummy:
+					if dummy[key] != 0:
+						temp.append(key)
+						if len(temp) == 128 or state == 1:
+							self.parts.put(temp)
+							state += -1
+							break
+						else:
+							dummy[key] = 0
+							state += -1
+			else:
+				break
+		self.ts = {}
+		for tcount in range(5):
+			self.ts["th-"+str(tcount)] = Thread(target=self.run, daemon=True)
+			self.ts["th-"+str(tcount)].start()
+
+		test = Thread(target=self.debug, daemon=False)
+		test.start()
+		#self.partnumber =
+		#print(len(json.dumps(self.texts).encode("utf-8"))/204800)
+
+	def debug(self):
+		while True:
+			print(self.parts.qsize())
+			check = 0
+			for t in self.ts:
+				if not self.ts[t].is_alive():
+					check += 1
+			print("Check: {}".format(check))
+			if check == 5:
+				with open("output/not_sorted_translation.json", "w") as f:
+					f.write(json.dumps(self.results))
+					break
+			time.sleep(5)
+	def run(self):
+		while True:
+			if not self.parts.empty():
+				query = self.requestTemplate
+				qq = self.parts.get(block=False)
+				query["q"] = qq
+				while True:
+					try:
+						resp = requests.post(self.api, data=query).json()
+						if "error" not in resp:
+							break
+						else:
+							print("Waiting...")
+							time.sleep(10)
+					except:
+						print("Waiting...")
+						time.sleep(10)
+						continue
+				# self.results = resp["data"]["translations"]
+				self.results.append([resp, qq])
+				time.sleep(2)
+			else:
+				break
+		# for text in self.texts:
+		# 	query = self.requestTemplate
+		# 	query["q"] = text
+		# 	resp = requests.post(self.api, data=query).json()
+		# 	print(resp)
+		# 	break
+
+req = translated()
+req.comp()
+#req.run()
