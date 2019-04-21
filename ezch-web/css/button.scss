@@ -1,0 +1,20 @@
+@import 'vars';
+
+.button {
+	transition-duration: 0.15s;
+}
+
+.button:hover {
+	background-color: $secondary-color;
+	transform: scale(1.15);
+}
+
+
+.button-orange {
+	background-color: $secondary-color;
+}
+
+.button-toggle {
+	transform: rotate(90deg);
+	background-color: $third-color;
+}

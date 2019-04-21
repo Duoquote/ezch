@@ -1,0 +1,17 @@
+{
+  "name": "ezch-sw",
+  "version": "0.0.1",
+  "description": "Server-side of ezch project, prepares the required data and sends back.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Duoquote",
+  "license": "MIT",
+  "dependencies": {
+    "body-parser": "^1.18.3",
+    "cors": "^2.8.5",
+    "nodejieba": "^2.3.0",
+    "npm": "^6.9.0"
+  }
+}

@@ -1,0 +1,42 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+	<title>Chinese</title>
+	<meta charset="utf-8">
+	<link rel="stylesheet" type="text/css" href="main.css">
+	<meta http-equiv="Access-Control-Allow-Origin" content="*">
+	<meta http-equiv="Content-Security-Policy" content="default-src *; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline' ajax.cloudflare.com;">
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1">
+	<script type="text/javascript">
+		if (window.location.origin.split("http://")[1] == "localhost") {
+			window.host = "localhost:3000";
+		} else {
+			window.host = "167.86.78.19:3000";
+		}
+	</script>
+</head>
+<body>
+	<nav class="bottom-bar">
+		<ul>
+			<li name="menu">
+				<a id="settings-button" href="#" id="menu-toggle"><img class="mini-img" src="img/menu.png"></a>
+			</li>
+			<li name="menu">
+				<a id="send" href="#result"><img class="mini-img" src="img/send.png"></a>
+			</li>
+		</ul>
+		<div id="settings-panel" class="settings-panel hide"></div>
+	</nav>
+	<div id="main" class="main" style="left: 0px;">
+		<div id="input-container" class="input-container">
+			<textarea placeholder="我很喜欢中文。"></textarea>
+		</div>
+		<div id="result-container" class="result-container"></div>
+	</div>
+<script type="text/javascript" src="scripts/hide.js"></script>
+<script type="text/javascript" src="scripts/class.js"></script>
+<script type="text/javascript" src="web.js"></script>
+<script type="text/javascript" src="main.js"></script>
+<script type="text/javascript" src="tooltip.js"></script>
+</body>
+</html>
