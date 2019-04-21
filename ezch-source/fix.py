@@ -109,16 +109,19 @@ class translated:
 		with open("output/words1.json") as f:
 			wordList = json.loads(f.read())
 		dummy = {}
-		count = 0
+		for key in hanziList:
+			if "kDefinition" in hanziList[key]:
+				for defs in hanziList[key]["kDefinition"]:
+					if defs not in dummy:
+						dummy[defs] = 1
+					else:
+						dummy[defs] += 1
 		for word in wordList:
 			for defs in wordList[word]["definitions"]:
-				if not defs in dummy:
+				if defs not in dummy:
 					dummy[defs] = 1
 				else:
 					dummy[defs] += 1
-			count += 1
-			# if count > 50:
-			# 	break
 		state = len(dummy)
 		while True:
 			temp = []
@@ -170,6 +173,7 @@ class translated:
 						if "error" not in resp:
 							break
 						else:
+							print(resp)
 							print("Waiting...")
 							time.sleep(10)
 					except:
