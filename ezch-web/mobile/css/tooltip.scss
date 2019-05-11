@@ -1,0 +1,19 @@
+.tooltip-main {
+    width: 0;
+    height: 0;
+    position: fixed;
+    z-index: 5000;
+}
+
+.tooltip-main > span {
+    position: absolute;
+    display: block;
+    padding: 10px;
+    overflow: auto;
+    box-sizing: border-box;
+    background-color: #d05858;
+    color: #ffffff;
+    border-radius: 5px;
+    font-family: sans-serif;
+    font-size: 15pt;
+}

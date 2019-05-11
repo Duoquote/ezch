@@ -1,80 +1,33 @@
-import os, re
+import os, re, sys, shutil
+from pprint import pprint
 
+mobileDir = "./mobile"
+mobileDir = mobileDir.replace("\\", "/")
+if mobileDir[-1] == "/":
+    mobileDir = mobileDir[:-1]
+notation = re.compile(r"^\/\/\s*#\$")
 
-class jsCreate:
+class jsCompiler:
     def __init__(self):
-        self.template = """
-        var app = {
-            initialize: function() {
-        {}
-            }
-        };
-        app.initialize();
-        """
-        self.files = ["main.js"]
-        self.checkf = os.listdir("js")
-
-        self.initPart = ""
-        self.mainPart = ""
-
-        self.lastProcess = ""
-        self.lastStatus = "END"
-
-    def jsHandler(self, process):
-        command = re.sub(r"( |\n|\r|//)", "", process)
-        if process.startswith("//") and command[0] == "$":
-            self.lastProcess = "INIT"
-            self.lastStatus = command.split("-")[1]
-        else:
-            if self.lastProcess == "INIT" and self.lastStatus == "START":
-                if process != "\n":
-                    self.initPart += process
-            else:
-                self.mainPart += process
-
+        self.blacklist = {"files": ["android.py"], "folders": ["mobile"]}
+        self.files = []
+        for path, folder, fileName in os.walk("."):
+            path = path.replace("\\", "/")
+            if folder not in self.blacklist["folders"]:
+                if not path.startswith(mobileDir):
+                    newPath = path.replace(".", mobileDir+"/").replace("//", "/")
+                    if newPath[-1] == "/":
+                        newPath = newPath[:-1]
+                    for file in fileName:
+                        if file not in self.blacklist["files"]:
+                            newFile = (newPath+"/"+file)
+                            file = path+"/"+file
+                            self.files.append([newPath, file, newFile])
+        pprint(self.files)
     def run(self):
-        for filename in self.files:
-            if filename in self.checkf:
-                f = open(filename)
-                fdata = f.readlines()
-                f.close()
-                for line in fdata:
-                    self.jsHandler(line)
-            else:
-                print("Invalid file name(s)")
-        with open("index.js")
+        for file in self.files:
+            if not os.path.exists(file[0]):
+                os.makedirs(file[0])
+            shutil.copy(file[1], file[2])
 
-
-class copySource:
-    def __init__(self):
-        self.prefix = "mobile"
-        self.blacklist = ["main.js", "web.js", "android.py"]
-        self.folders = ["."]
-
-    def run(self):
-        for f in os.listdir():
-            if "." not in f:
-                self.folders.append(f)
-        del self.folders[self.folders.index(self.prefix)]
-
-        for folder in self.folders:
-            if not os.path.exists(self.prefix+"/"+folder):
-                os.mkdir(self.prefix+"/"+folder)
-            fi = os.listdir(folder)
-            files = []
-            for x in fi:
-                if "." in x:
-                    files.append(x)
-            for file in files:
-                if file not in self.blacklist and ".scss" not in file:
-                    if folder == ".":
-                        path = "cp {file} {prefix}/{file}".format(file=file, prefix=self.prefix)
-                    else:
-                        path = "cp {folder}/{file} {prefix}/{folder}/{file}".format(folder=folder, prefix=self.prefix, file=file)
-                    os.system(path)
-
-jsCreate().run()
-copySource().run()
-
-
-#with open("mobile/")
+jsCompiler().run()

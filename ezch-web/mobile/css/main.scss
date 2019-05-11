@@ -1,0 +1,207 @@
+@import 'vars';
+@import 'reset';
+@import 'button';
+@import 'tooltip';
+
+$tab-count: 2;
+$container-width: 100%/$tab-count;
+$width: $tab-count * 100%;
+$height: calc(100% - 52px);
+
+a, a:focus, a:active, a:hover{
+	-webkit-tap-highlight-color: rgba(0,0,0,0);
+	outline: 0;
+}
+
+body, html {
+	height: 100%;
+	width: 100%;
+	background-color: $primary-color;
+}
+
+a {
+	cursor: pointer;
+	color: $font-color;
+	text-decoration: none;
+	font-family: $font;
+	font-weight: 200;
+}
+
+.bottom-bar {
+	height: max-content;
+	background-color: $secondary-color;
+	position: fixed;
+	width: 100%;
+	z-index: 500;
+}
+
+.bottom-bar > ul {
+}
+
+.bottom-bar > ul > li {
+	float: left;
+	width: max-content;
+}
+
+.bottom-bar > ul > li > a {
+	padding: 10px;
+	display: block;
+}
+.bottom-bar > ul > li:last-child {
+	width: 100%;
+	z-index: -1;
+	position: fixed;
+}
+
+.mini-img {
+	height: 32px;
+	display: block;
+	margin: auto;
+}
+
+#settings-button {
+	transition-duration: 0.15s;
+}
+
+
+.settings-panel {
+	height: $height;
+	width: 100%;
+	position: fixed;
+	bottom: 0;
+	background-color: $third-color;
+	z-index: 500;
+}
+
+.hide {
+	display: none !important;
+}
+
+.main {
+	height: $height;
+	width: 100%;
+	display: block;
+	position: fixed;
+	bottom: 0;
+	transition-duration: 0.15s;
+}
+
+.main > div {
+	float:left;
+	box-sizing: border-box;
+}
+
+.input-container {
+	width: $container-width;
+	height: 100%;
+	background-color: $primary-color;
+}
+
+.input-container > textarea {
+	border: 0;
+	box-sizing: border-box;
+	height: 100%;
+	width: 100%;
+	background-color: $primary-color;
+	color: #fff;
+	padding: 20px;
+	font-family: Georgia, "Times New Roman", "KaiTi", "楷体", STKaiti, "华文楷体", serif;
+	font-size: 30pt;
+	text-shadow: 0 0 4px $secondary-color;
+	resize: none;
+}
+
+.result-container {
+	width: $container-width;
+	height: 100%;
+	background-color: $third-color;
+	padding: 10px;
+	font-family: Georgia, "Times New Roman", "KaiTi", "楷体", STKaiti, "华文楷体", serif;
+	overflow: auto;
+}
+
+.trans {
+	transition-duration: unset;
+}
+
+.word {
+	float: left;
+	transition-duration: 0.15s;
+	padding: 1px;
+	pointer-events: none;
+}
+
+.hanzi {
+	user-select: none;
+	pointer-events: auto;
+	float: left;
+	padding: 5px;
+    font-size: 20pt;
+    color: #fff;
+    text-shadow: 0 0 5px #fff;
+    transition-duration: 0.15s;
+    text-align: center;
+}
+
+.pinyin {
+	font-family: "Courier New";
+    font-size: 15pt;
+}
+
+%word {
+	background-color: $forth-color;
+    border-radius: 5px;
+    box-shadow: 0px 0px 0px 1px #fff inset;
+}
+
+%hanzi {
+	background-color: #CD7E2C;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+.word:hover {
+	@extend %word;
+}
+
+.hanzi:hover {
+	@extend %hanzi;
+}
+
+.word-select {
+	@extend %word;
+}
+
+.hanzi-select {
+	@extend %hanzi;
+}
+
+
+
+
+@keyframes slide-appear {
+
+from {
+	left: -100%;
+}
+
+to {
+	left: 0;
+}
+
+}
+
+
+@media only screen and (max-width:768px) {
+	.settings-panel {
+		top: 0 !important;
+	}
+	.bottom-bar {
+		bottom: 0;
+	}
+	.main {
+		top: 0;
+		width: $width;
+	}
+
+}

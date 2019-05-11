@@ -12,18 +12,16 @@
 // For Turkish people:
 // Türkçe açıklama
 // Bu javascript dosyası neredeyse tüm istemci tarafının işlemlerini
-// gerçekleştiren fonksiyonlar içerir. Ne yazık ki açıklamaları sadece ingilizce
-// hazırladım çünkü iki ayrı dilde hazırlamak gerçekten uğraştırıcı ve burası
-// global bir platform.
+// gerçekleştiren fonksiyonlar içerir.
 
 
-// $INIT-START
-
+// INITIALIZE
 window.hashes = [
-	"#input", "#result", "#camera"
+	"#input", "#result"
 ];
 window.location.hash = "#input";
 window.initial = 0;
+window.scroll = false;
 window.status = false;
 window.writing = false;
 window.tip = null;
@@ -31,16 +29,31 @@ window.lastc = new Date().getTime();
 window.toggle = 0;
 window.tooltips = {};
 window.lastVal = null;
-window.addEventListener("resize", function(e){checkTtip(e)});
+window.lastPos = false;
+window.checkPos = false;
+window.moveYToggle = false;
+window.platform = "desktop";
+
 document.body.addEventListener("click", function(e){checkTtip(e)});
 document.getElementById("result-container").addEventListener("scroll", function(e){checkTtip(e)});
 document.getElementById("input-container").firstElementChild.addEventListener("scroll", function(e){checkTtip(e)});
+window.addEventListener("load", function(e){
+	platformGet();
+});
+window.addEventListener("resize", function(e){
+	platformGet();
+	if (window.platform == "desktop") {
+		window.location.hash = window.hashes[0];
+	}
+});
 
 if (localStorage["settings"] == null) {
 	localStorage["settings"] = JSON.stringify({"pinyin-display": true});
 }
 
-// $INIT-END
+//////////////////////////////////
+
+// $mobile
 
 function setSet(setting, value) {
 	var settings = JSON.parse(localStorage["settings"]);
@@ -56,20 +69,39 @@ function getSet(setting) {
 
 function platformGet() {
 	if (window.innerWidth <= 768) {
+		if (window.platform == "desktop") {
+			dragEvent(true);
+		}
 		window.platform = "mobile";
 	} else {
+		if (window.platform == "mobile") {
+			dragEvent(false);
+		}
 		window.platform = "desktop";
 	}
 };
-window.addEventListener("load", function(e){
-	platformGet();
-});
-window.addEventListener("resize", function(e){
-	platformGet();
-	if (window.platform == "desktop") {
-		window.location.hash = window.hashes[0];
+
+function dragEvent(val) {
+	if (val) {
+		document.getElementById("main").addEventListener("touchstart", dragStart);
+		document.getElementById("main").addEventListener("mousedown", dragStart);
+
+		document.getElementById("main").addEventListener("mousemove", dragMove);
+		document.getElementById("main").addEventListener("touchmove", dragMove);
+
+		document.getElementById("main").addEventListener("touchend", dragEnd);
+		document.getElementById("main").addEventListener("mouseup", dragEnd);
+	} else {
+		document.getElementById("main").removeEventListener("touchstart", dragStart);
+		document.getElementById("main").removeEventListener("mousedown", dragStart);
+
+		document.getElementById("main").removeEventListener("mousemove", dragMove);
+		document.getElementById("main").removeEventListener("touchmove", dragMove);
+
+		document.getElementById("main").removeEventListener("touchend", dragEnd);
+		document.getElementById("main").removeEventListener("mouseup", dragEnd);
 	}
-});
+}
 
 document.getElementById("send").addEventListener("click", function(e){
 	if (window.platform == "desktop") {
@@ -128,75 +160,104 @@ window.addEventListener("hashchange", function(e){
 	}
 });
 
-document.getElementById("main").addEventListener("touchstart", dragStart);
-document.getElementById("main").addEventListener("mousedown", dragStart);
-
-document.getElementById("main").addEventListener("mousemove", dragMove);
-document.getElementById("main").addEventListener("touchmove", dragMove);
-
-document.getElementById("main").addEventListener("touchend", dragEnd);
-document.getElementById("main").addEventListener("mouseup", dragEnd);
+window.swipeVal = {
+	"lastPos": false,
+	"checkerId": false,
+	"scrolling": false,
+	"initial": 0,
+	"moving": false,
+	"leftInitial": 0,
+	"toggle": false
+}
 
 function dragStart(e) {
-	if (window.platform == "mobile") {
-		document.getElementById("main").className += " trans";
-		var posX;
-		if (e.type == "touchstart") {
-			posX = e.changedTouches[0].clientX;
-		} else {
-			posX = e.clientX;
-		}
-		window.initial = window.innerWidth * window.hashes.indexOf(window.location.hash) * -1;
-		window.moveinit = posX;
-		window.moving = true;
+	document.getElementById("main").className += " trans";
+	if (e.type == "touchstart") {
+		var posX = e.changedTouches[0].clientX;
+		var posY = e.changedTouches[0].clientY;
+	} else {
+		var posX = e.clientX;
+		var posY = e.clientY;
 	}
+	window.swipeVal["leftInitial"] = window.innerWidth * window.hashes.indexOf(window.location.hash);
+	window.swipeVal["initial"] = [posX, posY];
+	window.swipeVal["moving"] = false;
+	window.swipeVal["toggle"] = false;
+	if (window.swipeVal["checkerId"]) {
+		clearInterval(window.swipeVal["checkerId"]);
+	};
+	window.swipeVal["checkerId"] = setInterval(checkDrag, 25);
 }
 
 function dragMove(e) {
-	if (window.moving == true && window.platform == "mobile") {
-		var posX;
-		if (e.type == "touchmove") {
-			posX = e.changedTouches[0].clientX;
-		} else {
-			posX = e.clientX;
+	window.swipeVal["lastPos"] = e;
+}
+
+function checkDrag() {
+	var e = window.swipeVal["lastPos"];
+	if (e.type == "touchmove") {
+		var posX = e.changedTouches[0].clientX;
+		var posY = e.changedTouches[0].clientY;
+	} else {
+		var posX = e.clientX;
+		var posY = e.clientY;
+	}
+	if (window.swipeVal["toggle"] == false) {
+		var poss = [Math.abs(window.swipeVal["initial"][0] - posX), Math.abs(window.swipeVal["initial"][1] - posY)];
+		if (poss[0] > 30 || poss[1] > 30) {
+			console.log(poss[1]/poss[0]);
+			if (poss[1]/poss[0] > 1.5) {
+				window.swipeVal["moving"] = false;
+				dragEnd(e);
+			} else {
+				window.swipeVal["moving"] = true;
+			}
+			window.swipeVal["toggle"] = true;
 		}
-		var pos = Math.round(window.initial + posX - window.moveinit);
-		if (pos - window.innerWidth >= document.getElementById("main").clientWidth * -1 && pos <= 0) {
-			document.getElementById("main").style.left = pos.toString() + "px";
+	}
+	if (window.swipeVal["moving"]) {
+		var pos = Math.round(window.swipeVal["leftInitial"] + window.swipeVal["initial"][0] - posX);
+		if (pos >= 0 && pos <= (window.hashes.length-1) * window.innerWidth) {
+			document.getElementById("main").style.left = (pos * -1).toString() + "px";
 		}
 	}
 }
 
 function dragEnd(e) {
-	if (window.platform == "mobile") {
-		document.getElementById("main").className = document.getElementById("main").className.split(" ")[0];
-		var posX;
-		window.moving = false;
-		if (e.type == "touchend") {
-			posX = e.changedTouches[0].clientX;
+	clearInterval(window.swipeVal["checkerId"]);
+	document.getElementById("main").className = document.getElementById("main").className.split(" ")[0];
+	if (e.type == "touchend") {
+		var	posX = e.changedTouches[0].clientX;
+	} else {
+		var posX = e.clientX;
+	}
+	var pos = Math.round(window.swipeVal["leftInitial"] - window.swipeVal["initial"][0] + posX);
+	var cursor = window.hashes.indexOf(window.location.hash);
+	var elemLeft = document.getElementById("main");
+	if (posX - window.swipeVal["initial"][0] > 0 && window.swipeVal["moving"]) {
+		if (cursor - 1 < 0) {
+			elemLeft.style.left = "0%";
 		} else {
-			posX = e.clientX;
-		}
-		var pos = Math.round(window.initial + posX - window.moveinit);
-		if (pos - window.innerWidth >= document.getElementById("main").clientWidth * -1 && pos <= 0) {
-			var last = posX;
-			var sum = window.moveinit - last;
-			if (sum >= 0) {
-				if (sum * 100 / window.innerWidth > 65) {
-					window.location.hash = window.hashes[window.hashes.indexOf(window.location.hash) + 1];
-				} else {
-					document.getElementById("main").style.left = (window.hashes.indexOf(window.location.hash) * -1 * 100).toString() + "%";
-				}
+			var sum = Math.abs(posX - window.swipeVal["initial"][0])*100/window.innerWidth;
+			if (sum > 55) {
+				window.location.hash = window.hashes[cursor - 1];
 			} else {
-				if (sum * -1 * 100 / window.innerWidth > 65) {
-					window.location.hash = window.hashes[window.hashes.indexOf(window.location.hash) - 1];
-				} else {
-					document.getElementById("main").style.left = (window.hashes.indexOf(window.location.hash) * -1 * 100).toString() + "%";
-				}
+				elemLeft.style.left = (cursor * -1 * 100).toString() + "%";
 			}
-		} else {
-			document.getElementById("main").style.left = (window.hashes.indexOf(window.location.hash) * -1 * 100).toString() + "%";
 		}
+	} else if (posX - window.swipeVal["initial"][0] < 0 && window.swipeVal["moving"]) {
+		if (cursor + 1 > window.hashes.length-1) {
+			window.location.hash = window.hashes[window.hashes.length-1];
+		} else {
+			var sum = Math.abs(posX - window.swipeVal["initial"][0])*100/window.innerWidth;
+			if (sum > 55) {
+				window.location.hash = window.hashes[cursor + 1];
+			} else {
+				elemLeft.style.left = (cursor * -1 * 100).toString() + "%";
+			}
+		}
+	} else {
+		elemLeft.style.left = (cursor * -1 * 100).toString() + "%";
 	}
 }
 
